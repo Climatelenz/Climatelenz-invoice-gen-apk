@@ -1134,6 +1134,7 @@
             row.querySelectorAll('input:not(.svc-total)').forEach(inp => {
                 inp.addEventListener('input', calculate);
             });
+            row.querySelector('.svc-standards')?.addEventListener('change', renderItems);
         }
 
         // ── Tier presets ──
