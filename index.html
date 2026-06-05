@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClimateLenz — Professional Export Invoice Generator</title>
+    <style>
+        :root {
+            --primary: #0f2e26;
+            --accent: #f4c430;
+            --green: #1e6b4a;
+            --teal: #0d9488;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+            --danger: #dc2626;
+            --warning: #d97706;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f1f5f9;
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .app-container {
+            max-width: 1480px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        .header-bar {
+            background: var(--primary);
+            color: white;
+            padding: 18px 28px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 12px rgba(15,46,38,0.15);
+        }
+        .logo-circle {
+            width: 44px; height: 44px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 18px;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+        .header-bar h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+        .header-bar .tagline { 
+            margin-left: auto; 
+            font-size: 12px; 
+            opacity: 0.75;
+            font-weight: 500;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 1180px) {
+            .two-col { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .panel-header {
+            background: linear-gradient(135deg, var(--light) 0%, #f1f5f9 100%);
+            padding: 12px 18px;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            border-bottom: 1px solid var(--border);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .panel-header .icon { font-size: 14px; }
+        .panel-body { padding: 18px; }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: #fff;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(13,148,136,0.08);
+        }
+        .form-group input[readonly], .form-group textarea[readonly] {
+            background: #f8fafc;
+            color: var(--text-light);
+            border-color: #e2e8f0;
+        }
+        .form-group textarea { resize: vertical; min-height: 52px; }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+        .form-hint {
+            font-size: 10px;
+            color: var(--text-light);
+            margin-top: 3px;
+            font-style: italic;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-left: 6px;
+        }
+        .badge-locked { background: #fee2e2; color: #991b1b; }
+        .badge-editable { background: #dbeafe; color: #1e40af; }
+
+        .service-row {
+            display: grid;
+            grid-template-columns: 2fr 60px 90px 100px 34px;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 6px;
+            padding: 8px;
+            background: var(--light);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .service-row input {
+            padding: 7px 9px;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            width: 100%;
+            font-family: inherit;
+        }
+        .service-row input:focus { outline: none; border-color: var(--teal); }
+        .btn-icon {
+            width: 30px; height: 30px;
+            border: none; border-radius: 6px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            transition: all 0.15s;
+        }
+        .btn-add { background: var(--green); color: white; }
+        .btn-del { background: var(--danger); color: white; }
+        .btn-add:hover { background: #145a3a; }
+        .btn-del:hover { background: #b91c1c; }
+
+        .totals-box {
+            background: linear-gradient(135deg, var(--light) 0%, #f0fdf4 100%);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 10px;
+            border: 1px solid #bbf7d0;
+        }
+        .totals-box .row {
+            display: flex; justify-content: space-between;
+            padding: 5px 0;
+            font-size: 13px;
+            color: var(--text-light);
+        }
+        .totals-box .row.total {
+            font-size: 17px; font-weight: 800;
+            color: var(--primary);
+            border-top: 2px solid var(--green);
+            margin-top: 6px; padding-top: 10px;
+        }
+        .totals-box .row .amt { font-weight: 700; color: var(--text); }
+
+        .action-bar {
+            display: flex; gap: 8px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none; border-radius: 8px;
+            font-size: 13px; font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 8px rgba(15,46,38,0.2);
+        }
+        .btn-primary:hover { background: #0a1f1a; transform: translateY(-1px); }
+        .btn-accent {
+            background: var(--accent);
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(244,196,48,0.25);
+        }
+        .btn-accent:hover { background: #e0b020; transform: translateY(-1px); }
+        .btn-outline {
+            background: white;
+            border: 1.5px solid var(--border);
+            color: var(--text);
+        }
+        .btn-outline:hover { background: var(--light); border-color: var(--teal); }
+
+        .section-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 12px 0;
+        }
+
+        /* ===== INVOICE PREVIEW ===== */
+        .invoice-preview {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .invoice-paper {
+            padding: 45px 50px;
+            max-width: 920px;
+            margin: 0 auto;
+        }
+        @media print {
+            body { background: white; }
+            .app-container { padding: 0; max-width: 100%; }
+            .two-col { display: block; }
+            .left-panel, .header-bar, .action-bar, .no-print { display: none !important; }
+            .invoice-preview {
+                box-shadow: none;
+                border-radius: 0;
+                width: 100%;
+                border: none;
+            }
+            .invoice-paper { padding: 25px 35px; }
+        }
+
+        .inv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 3px solid var(--accent);
+        }
+        .inv-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .inv-logo {
+            width: 68px; height: 68px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(244,196,48,0.3);
+        }
+        .inv-logo svg { width: 48px; height: 48px; }
+        .inv-brand-text h2 {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }
+        .inv-brand-text p {
+            font-size: 12px;
+            color: var(--green);
+            font-weight: 700;
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .inv-meta {
+            text-align: right;
+        }
+        .inv-meta .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #94a3b8;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+        .inv-meta .value {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-family: 'SF Mono', monospace;
+        }
+        .inv-meta .value.date {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+        }
+
+        .inv-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            margin-bottom: 28px;
+        }
+        .addr-block h4 {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        .addr-block .name {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 3px;
+        }
+        .addr-block .line {
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.75;
+        }
+        .addr-block .line strong { color: var(--primary); }
+        .addr-block .tag {
+            display: inline-block;
+            margin-top: 6px;
+            background: #f0fdf4;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--green);
+            font-family: 'SF Mono', monospace;
+            border: 1px solid #bbf7d0;
+        }
+        .addr-block .tag.pan { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+
+        .compliance-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 24px;
+            padding: 14px;
+            background: linear-gradient(135deg, #f0fdfa 0%, #f0fdf4 100%);
+            border-radius: 10px;
+            border: 1px solid #ccfbf1;
+        }
+        .compliance-item {
+            text-align: center;
+        }
+        .compliance-item .clabel {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #94a3b8;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .compliance-item .cvalue {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'SF Mono', monospace;
+        }
+
+        .inv-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+            font-size: 13px;
+        }
+        .inv-table thead th {
+            background: var(--primary);
+            color: white;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 700;
+        }
+        .inv-table thead th:last-child { text-align: right; }
+        .inv-table thead th:nth-child(3), .inv-table thead th:nth-child(4) { text-align: right; }
+        .inv-table tbody td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+        .inv-table tbody td:last-child { text-align: right; font-weight: 700; color: var(--primary); }
+        .inv-table tbody td:nth-child(3), .inv-table tbody td:nth-child(4) { text-align: right; }
+        .inv-table tbody tr:nth-child(even) { background: #fafafa; }
+        .item-desc { font-weight: 700; color: var(--primary); font-size: 13px; }
+        .item-scope { font-size: 11px; color: #64748b; margin-top: 4px; line-height: 1.5; }
+        .item-sac { 
+            display: inline-block; 
+            margin-top: 4px; 
+            font-size: 10px; 
+            background: #e0f2fe; 
+            color: #0369a1; 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            font-weight: 600;
+        }
+
+        .inv-summary {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 24px;
+        }
+        .inv-summary-box {
+            width: 340px;
+            background: var(--light);
+            border-radius: 10px;
+            padding: 18px;
+            border: 1px solid var(--border);
+        }
+        .sum-row {
+            display: flex; justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+            color: #475569;
+        }
+        .sum-row.bold {
+            font-weight: 800;
+            color: var(--primary);
+            font-size: 16px;
+            border-top: 2px solid var(--primary);
+            margin-top: 6px;
+            padding-top: 10px;
+        }
+        .sum-row .amt { font-weight: 700; }
+        .sum-row .amt-eur { font-weight: 800; color: var(--primary); }
+
+        .exchange-box {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .exchange-box .ex-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #92400e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .exchange-box .ex-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'SF Mono', monospace;
+        }
+
+        .inv-terms {
+            background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 100%);
+            border-radius: 10px;
+            padding: 22px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--accent);
+        }
+        .inv-terms h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+        .inv-terms ul {
+            list-style: none;
+            font-size: 11.5px;
+            line-height: 1.9;
+            color: #475569;
+        }
+        .inv-terms ul li {
+            padding-left: 18px;
+            position: relative;
+        }
+        .inv-terms ul li::before {
+            content: "›";
+            position: absolute;
+            left: 0;
+            color: var(--green);
+            font-weight: 800;
+            font-size: 14px;
+        }
+        .inv-terms .highlight {
+            background: #fef3c7;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-weight: 700;
+            color: #92400e;
+        }
+
+        .bank-box {
+            background: var(--light);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .bank-box h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+        .bank-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 24px;
+        }
+        .bank-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 5px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        .bank-item .blabel { color: #64748b; font-weight: 600; }
+        .bank-item .bvalue { color: var(--primary); font-weight: 700; font-family: 'SF Mono', monospace; }
+
+        .gst-declaration {
+            background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+            border: 2px solid var(--green);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .gst-declaration .gst-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--green);
+            margin-bottom: 6px;
+        }
+        .gst-declaration .gst-text {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1.6;
+        }
+
+        .stamp-box {
+            margin-top: 24px;
+            padding: 18px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 12px;
+            background: #fafafa;
+        }
+        .stamp-box strong { color: var(--primary); }
+
+        .inv-footer {
+            text-align: center;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        .inv-footer .tagline {
+            font-weight: 700;
+            color: var(--green);
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+
+        .tier-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-left: 6px;
+        }
+        .tier-quick { background: #dcfce7; color: #166534; }
+        .tier-core { background: #dbeafe; color: #1e40af; }
+        .tier-full { background: #fef3c7; color: #92400e; }
+
+        .locked-field {
+            background: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+            color: #475569 !important;
+            cursor: not-allowed;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="app-container">
+        <div class="header-bar">
+            <div class="logo-circle">CL</div>
+            <div>
+                <h1>ClimateLenz — Export Invoice Generator</h1>
+            </div>
+            <span class="tagline">India → EU · B2B Services · GST Zero-Rated Export</span>
+        </div>
+
+        <div class="two-col">
+            <!-- LEFT: FORM -->
+            <div class="left-panel">
+                <!-- INVOICE DETAILS -->
+                <div class="panel">
+                    <div class="panel-header"><span class="icon">📄</span> Invoice Details</div>
+                    <div class="panel-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Invoice Number <span class="badge badge-editable">Editable</span></label>
+                                <input type="text" id="invNumber" value="CL-2026-001">
+                            </div>
+                            <div class="form-group">
+                                <label>Invoice Date</label>
+                                <input type="date" id="invDate">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Due Date</label>
+                                <input type="date" id="dueDate">
+                            </div>
+                            <div class="form-group">
+                                <label>PO / Reference Number</label>
+                                <input type="text" id="poNumber" placeholder="Client PO #">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Place of Supply</label>
+                                <input type="text" id="placeSupply" value="Outside India — European Union" readonly class="locked-field">
+                                <div class="form-hint">Auto-set per IGST Act Section 13(2)</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Invoice Currency</label>
+                                <input type="text" id="currency" value="EUR (Euro)" readonly class="locked-field">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTRACTOR (LOCKED) -->
+                <div class="panel" style="margin-top:14px">
+                    <div class="panel-header"><span class="icon">🔒</span> Contractor (You) — Immutable</div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label>Company Name <span class="badge badge-locked">Locked</span></label>
+                            <input type="text" value="ClimateLenz" readonly class="locked-field">
+                        </div>
+                        <div class="form-group">
+                            <label>Legal Name <span class="badge badge-locked">Locked</span></label>
+                            <input type="text" value="Shishir S Tambe" readonly class="locked-field">
+                        </div>
+                        <div class="form-group">
+                            <label>Address <span class="badge badge-locked">Locked</span></label>
+                            <textarea readonly class="locked-field" rows="3">211, Amann Shivshankar Bldg, Smashan Bhoomi Road, Dahanuakrwadi, Kandivali (West), Mumbai — 400067, Maharashtra, INDIA</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>PAN <span class="badge badge-locked">Locked</span></label>
+                                <input type="text" value="BMOPT4556M" readonly class="locked-field">
+                            </div>
+                            <div class="form-group">
+                                <label>GSTIN <span class="badge badge-editable">Editable</span></label>
+                                <input type="text" id="gstin" value="" placeholder="27XXXXX0000X1Z5">
+                                <div class="form-hint">Your 15-digit GST number</div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>IEC Code <span class="badge badge-editable">Editable</span></label>
+                                <input type="text" id="iec" value="" placeholder="10-digit DGFT code">
+                                <div class="form-hint">Import Export Code (DGFT)</div>
+                            </div>
+                            <div class="form-group">
+                                <label>SAC Code <span class="badge badge-editable">Editable</span></label>
+                                <input type="text" id="sac" value="9983" placeholder="e.g. 9983">
+                                <div class="form-hint">Service Accounting Code</div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Email <span class="badge badge-locked">Locked</span></label>
+                                <input type="text" value="shishirtambe@climatelenz.com" readonly class="locked-field">
+                            </div>
+                            <div class="form-group">
+                                <label>Phone <span class="badge badge-locked">Locked</span></label>
+                                <input type="text" value="+91 98209 74583" readonly class="locked-field">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CLIENT -->
+                <div class="panel" style="margin-top:14px">
+                    <div class="panel-header"><span class="icon">🏢</span> Client (Bill To)</div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label>Client Company Name</label>
+                            <input type="text" id="clientName" placeholder="e.g. GreenTech GmbH">
+                        </div>
+                        <div class="form-group">
+                            <label>Client Full Address</label>
+                            <textarea id="clientAddress" rows="3" placeholder="Street, City, Postal Code, Country"></textarea>
+                            <div class="form-hint">Must include complete foreign address for Place of Supply</div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>VAT / EORI / Tax ID</label>
+                                <input type="text" id="clientVat" placeholder="e.g. DE123456789">
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Person</label>
+                                <input type="text" id="clientContact" placeholder="Name & Email">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Client Country</label>
+                            <input type="text" id="clientCountry" placeholder="e.g. Germany">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BANKING DETAILS -->
+                <div class="panel" style="margin-top:14px">
+                    <div class="panel-header"><span class="icon">🏦</span> Banking & Remittance Details</div>
+                    <div class="panel-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Beneficiary Name <span class="badge badge-locked">Locked</span></label>
+                                <input type="text" value="Shishir S Tambe / ClimateLenz" readonly class="locked-field">
+                            </div>
+                            <div class="form-group">
+                                <label>Bank Name</label>
+                                <input type="text" id="bankName" placeholder="e.g. HDFC Bank">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Account Number</label>
+                                <input type="text" id="accountNumber" placeholder="Your account number">
+                            </div>
+                            <div class="form-group">
+                                <label>Account Type</label>
+                                <select id="accountType">
+                                    <option value="Current">Current Account</option>
+                                    <option value="Savings">Savings Account</option>
+                                    <option value="FCNR">FCNR Account</option>
+                                    <option value="EEFC">EEFC Account</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row three">
+                            <div class="form-group">
+                                <label>IFSC Code</label>
+                                <input type="text" id="ifsc" placeholder="e.g. HDFC0000123">
+                                <div class="form-hint">Indian bank branch code</div>
+                            </div>
+                            <div class="form-group">
+                                <label>SWIFT / BIC</label>
+                                <input type="text" id="swift" placeholder="e.g. HDFCINBB">
+                                <div class="form-hint">International wire transfer</div>
+                            </div>
+                            <div class="form-group">
+                                <label>IBAN (if EU bank)</label>
+                                <input type="text" id="iban" placeholder="Optional">
+                                <div class="form-hint">For EU SEPA transfers</div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>AD Code</label>
+                                <input type="text" id="adCode" placeholder="e.g. 0101234">
+                                <div class="form-hint">Authorised Dealer Code (RBI)</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Branch Address</label>
+                                <input type="text" id="branchAddress" placeholder="Bank branch location">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Instructions / Notes</label>
+                            <textarea id="paymentNotes" rows="2" placeholder="Any special wire transfer instructions..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GST / LUT -->
+                <div class="panel" style="margin-top:14px">
+                    <div class="panel-header"><span class="icon">⚖️</span> GST & Export Compliance</div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label>Export Type</label>
+                            <select id="exportType">
+                                <option value="lut">Export under LUT (without IGST payment)</option>
+                                <option value="igst">Export with IGST payment (claim refund)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="lutGroup">
+                            <label>LUT / Bond ARN Number</label>
+                            <input type="text" id="lutArn" placeholder="e.g. AD2404260012345">
+                            <div class="form-hint">Letter of Undertaking Application Reference Number</div>
+                        </div>
+                        <div class="form-group" id="lutValidGroup">
+                            <label>LUT Validity Period</label>
+                            <input type="text" id="lutValid" placeholder="e.g. 01/04/2026 to 31/03/2027">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Exchange Rate (1 EUR = ₹)</label>
+                                <input type="number" id="exRate" value="92.50" step="0.01" min="0">
+                                <div class="form-hint">RBI reference rate on invoice date</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Rate Source & Date</label>
+                                <input type="text" id="rateSource" value="RBI Reference Rate">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SERVICES -->
+                <div class="panel" style="margin-top:14px">
+                    <div class="panel-header"><span class="icon">🛒</span> Services & Pricing</div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label>Quick-Add Service Tier</label>
+                            <select id="tierSelect" onchange="addTierService()">
+                                <option value="">— Select predefined tier —</option>
+                                <option value="quickstart">Climate Quickstart — €3,000</option>
+                                <option value="core">Core Compliance — €6,000</option>
+                                <option value="full">Full Assurance — €10,000</option>
+                            </select>
+                        </div>
+                        <div id="servicesList"></div>
+                        <button class="btn btn-add btn-icon" onclick="addServiceRow()" style="width:auto;padding:8px 14px;font-size:12px;margin-top:4px">
+                            + Add Custom Line Item
+                        </button>
+
+                        <div class="section-divider"></div>
+
+                        <div class="totals-box">
+                            <div class="row"><span>Subtotal (EUR)</span><span class="amt" id="previewSubtotal">€0.00</span></div>
+                            <div class="row"><span>IGST @ 0% (Zero-Rated Export)</span><span class="amt" id="previewTax">€0.00</span></div>
+                            <div class="row"><span>Discount</span><span class="amt" id="previewDiscount">€0.00</span></div>
+                            <div class="row"><span>INR Equivalent</span><span class="amt" id="previewINR">₹0.00</span></div>
+                            <div class="row total"><span>Total Due (EUR)</span><span class="amt" id="previewTotal">€0.00</span></div>
+                        </div>
+
+                        <div class="form-group" style="margin-top:12px">
+                            <label>Custom Notes for Client</label>
+                            <textarea id="customNotes" rows="2" placeholder="Any special instructions, delivery timeline, etc."></textarea>
+                        </div>
+
+                        <div class="action-bar">
+                            <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save PDF</button>
+                            <button class="btn btn-accent" onclick="resetForm()">↺ Reset All</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: LIVE PREVIEW -->
+            <div class="invoice-preview">
+                <div class="invoice-paper" id="invoicePaper">
+                    <!-- HEADER -->
+                    <div class="inv-header">
+                        <div class="inv-brand">
+                            <div class="inv-logo">
+                                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="100" height="100" fill="#f4c430" rx="50"/>
+                                    <path d="M50 20 A30 30 0 0 0 50 80 L50 20" fill="white"/>
+                                    <line x1="50" y1="50" x2="85" y2="25" stroke="#1e6b4a" stroke-width="6" stroke-linecap="round"/>
+                                    <line x1="50" y1="50" x2="82" y2="42" stroke="#1e6b4a" stroke-width="6" stroke-linecap="round"/>
+                                    <line x1="50" y1="50" x2="82" y2="58" stroke="#1e6b4a" stroke-width="6" stroke-linecap="round"/>
+                                    <line x1="50" y1="50" x2="85" y2="75" stroke="#1e6b4a" stroke-width="6" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <div class="inv-brand-text">
+                                <h2>ClimateLenz</h2>
+                                <p>Supply Chain Sustainability Reporting</p>
+                            </div>
+                        </div>
+                        <div class="inv-meta">
+                            <div class="label">Tax Invoice for Export</div>
+                            <div class="value" id="outInvNum">CL-2026-001</div>
+                            <div class="label">Invoice Date</div>
+                            <div class="value date" id="outInvDate">—</div>
+                            <div class="label">Due Date</div>
+                            <div class="value date" id="outDueDate">—</div>
+                        </div>
+                    </div>
+
+                    <!-- ADDRESSES -->
+                    <div class="inv-grid">
+                        <div class="addr-block">
+                            <h4>Exporter (Supplier)</h4>
+                            <div class="name">Shishir S Tambe</div>
+                            <div class="line">
+                                <strong>ClimateLenz</strong><br>
+                                211, Amann Shivshankar Bldg<br>
+                                Smashan Bhoomi Road, Dahanuakrwadi<br>
+                                Kandivali (West), Mumbai — 400067<br>
+                                Maharashtra, <strong>INDIA</strong><br>
+                                📧 shishirtambe@climatelenz.com<br>
+                                📞 +91 98209 74583
+                            </div>
+                            <div class="tag pan">PAN: BMOPT4556M</div>
+                            <div class="tag" id="outGstin" style="display:none">GSTIN: —</div>
+                            <div class="tag" id="outIec" style="display:none">IEC: —</div>
+                        </div>
+                        <div class="addr-block">
+                            <h4>Recipient (Client)</h4>
+                            <div class="name" id="outClientName">—</div>
+                            <div class="line" id="outClientAddr">—</div>
+                            <div class="tag" id="outClientVat" style="display:none">VAT: —</div>
+                            <div class="line" id="outClientContact" style="margin-top:6px;color:#64748b">—</div>
+                        </div>
+                    </div>
+
+                    <!-- COMPLIANCE BAR -->
+                    <div class="compliance-bar">
+                        <div class="compliance-item">
+                            <div class="clabel">Place of Supply</div>
+                            <div class="cvalue" id="outPlaceSupply">Outside India — EU</div>
+                        </div>
+                        <div class="compliance-item">
+                            <div class="clabel">SAC Code</div>
+                            <div class="cvalue" id="outSac">9983</div>
+                        </div>
+                        <div class="compliance-item">
+                            <div class="clabel">PO Reference</div>
+                            <div class="cvalue" id="outPo">—</div>
+                        </div>
+                        <div class="compliance-item">
+                            <div class="clabel">Payment Terms</div>
+                            <div class="cvalue">Net 30 Days</div>
+                        </div>
+                    </div>
+
+                    <!-- TABLE -->
+                    <table class="inv-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50%">Description</th>
+                                <th style="width:12%">SAC</th>
+                                <th style="width:10%">Qty</th>
+                                <th style="width:14%">Unit Price</th>
+                                <th style="width:14%">Amount (EUR)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="outItems">
+                            <tr>
+                                <td colspan="5" style="text-align:center;color:#94a3b8;padding:30px">
+                                    Add services using the form on the left
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- EXCHANGE RATE -->
+                    <div class="exchange-box">
+                        <div class="ex-label">💱 Exchange Rate & INR Equivalent</div>
+                        <div class="ex-value" id="outExchange">1 EUR = ₹92.50 (RBI Reference Rate) | Total INR: ₹0.00</div>
+                    </div>
+
+                    <!-- SUMMARY -->
+                    <div class="inv-summary">
+                        <div class="inv-summary-box">
+                            <div class="sum-row"><span>Subtotal</span><span class="amt-eur" id="outSubtotal">€0.00</span></div>
+                            <div class="sum-row"><span>IGST @ 0% (Export)</span><span class="amt" id="outTax">€0.00</span></div>
+                            <div class="sum-row"><span>Discount</span><span class="amt" id="outDiscount">€0.00</span></div>
+                            <div class="sum-row" style="border-top:1px dashed #cbd5e1;margin-top:4px;padding-top:8px">
+                                <span>INR Equivalent</span><span class="amt" id="outINR">₹0.00</span>
+                            </div>
+                            <div class="sum-row bold"><span>Total Due (EUR)</span><span class="amt-eur" id="outTotal">€0.00</span></div>
+                        </div>
+                    </div>
+
+                    <!-- GST DECLARATION -->
+                    <div class="gst-declaration" id="gstDeclaration">
+                        <div class="gst-title">GST Export Declaration</div>
+                        <div class="gst-text" id="gstText">
+                            Supply meant for export under LUT without payment of Integrated Tax (IGST).<br>
+                            LUT ARN: <span id="outLutArn">—</span> | Valid: <span id="outLutValid">—</span>
+                        </div>
+                    </div>
+
+                    <!-- BANK DETAILS -->
+                    <div class="bank-box">
+                        <h4>🏦 Bank Details for Remittance (FEMA Compliant)</h4>
+                        <div class="bank-grid">
+                            <div class="bank-item"><span class="blabel">Beneficiary</span><span class="bvalue">Shishir S Tambe / ClimateLenz</span></div>
+                            <div class="bank-item"><span class="blabel">Bank</span><span class="bvalue" id="outBank">—</span></div>
+                            <div class="bank-item"><span class="blabel">Account #</span><span class="bvalue" id="outAccount">—</span></div>
+                            <div class="bank-item"><span class="blabel">Account Type</span><span class="bvalue" id="outAccType">Current Account</span></div>
+                            <div class="bank-item"><span class="blabel">IFSC Code</span><span class="bvalue" id="outIfsc">—</span></div>
+                            <div class="bank-item"><span class="blabel">SWIFT / BIC</span><span class="bvalue" id="outSwift">—</span></div>
+                            <div class="bank-item"><span class="blabel">IBAN</span><span class="bvalue" id="outIban">—</span></div>
+                            <div class="bank-item"><span class="blabel">AD Code</span><span class="bvalue" id="outAdCode">—</span></div>
+                        </div>
+                        <div class="line" id="outBranchAddr" style="margin-top:8px;font-size:11px;color:#64748b;text-align:center">—</div>
+                        <div class="line" id="outPayNotes" style="margin-top:6px;font-size:11px;color:#475569;font-style:italic;text-align:center">—</div>
+                    </div>
+
+                    <!-- TERMS -->
+                    <div class="inv-terms">
+                        <h4>Terms, Conditions & Statutory Notes</h4>
+                        <ul>
+                            <li><strong>Payment Terms:</strong> Net 30 days from invoice date. Late payments subject to 1.5% per month service charge. Payment must be received in convertible foreign exchange (EUR/USD/GBP) or permitted INR as per RBI FEMA regulations.</li>
+                            <li><strong>Currency:</strong> All amounts are in Euro (EUR). Client bears any currency conversion or cross-border wire transfer fees. INR equivalent shown for GST reporting purposes only.</li>
+                            <li><strong>GST / Tax Treatment:</strong> <span class="highlight">Zero-Rated Supply</span> — Export of services from India to EU under IGST Act Section 13(2). Place of Supply: Outside India. IGST @ 0% (under LUT/Bond). No GST is chargeable on this invoice.</li>
+                            <li><strong>Export Compliance:</strong> This invoice is issued under Rule 46 of CGST Rules, 2017. Reported in GSTR-1 Table 6A. e-FIRA / FIRC to be obtained upon remittance receipt as per RBI guidelines.</li>
+                            <li><strong>Scope of Work:</strong> Services delivered as per agreed Statement of Work (SOW) and ESRS disclosure standards. Revisions included as per selected tier. Digital delivery via secure portal.</li>
+                            <li><strong>Confidentiality & Data:</strong> All client data handled per GDPR-compliant processing and ESRS disclosure standards. ClimateLenz acts as data processor under applicable EU-India data transfer frameworks.</li>
+                            <li><strong>Governing Law:</strong> This invoice is governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of courts in Mumbai, Maharashtra.</li>
+                            <li><strong>Banking:</strong> Remittance must match invoice value for BRC (Bank Realisation Certificate) filing. AD Code registered with RBI for foreign inward remittance.</li>
+                            <li><strong>Validity:</strong> This invoice is valid for 180 days from date of issue for GST refund / LUT compliance purposes.</li>
+                        </ul>
+                    </div>
+
+                    <!-- STAMP -->
+                    <div class="stamp-box">
+                        <strong>ClimateLenz</strong> — This is a computer-generated export tax invoice and is valid without physical signature.<br>
+                        Authorised Signatory: Shishir S Tambe | PAN: BMOPT4556M | GSTIN: <span id="outGstin2">—</span><br>
+                        For queries: shishirtambe@climatelenz.com | +91 98209 74583
+                    </div>
+
+                    <!-- FOOTER -->
+                    <div class="inv-footer">
+                        <div class="tagline">Empowering Transparent Supply Chains for a Sustainable Future</div>
+                        ClimateLenz · 211, Amann Shivshankar Bldg, Kandivali (W), Mumbai 400067, Maharashtra, India · PAN: BMOPT4556M<br>
+                        Registered under GST Act | DGFT IEC Registered | RBI AD Code Registered
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── Init Dates ──
+        const today = new Date();
+        document.getElementById('invDate').value = today.toISOString().split('T')[0];
+        const due = new Date(today); due.setDate(due.getDate()+30);
+        document.getElementById('dueDate').value = due.toISOString().split('T')[0];
+        updatePreview();
+
+        // ── Service rows ──
+        let serviceCount = 0;
+        const servicesList = document.getElementById('servicesList');
+
+        function addServiceRow(desc='', sac='', qty=1, price=0) {
+            serviceCount++;
+            const div = document.createElement('div');
+            div.className = 'service-row';
+            div.dataset.id = serviceCount;
+            div.innerHTML = `
+                <input type="text" class="svc-desc" placeholder="Service description" value="${desc}">
+                <input type="text" class="svc-sac" placeholder="SAC" value="${sac}" style="text-align:center">
+                <input type="number" class="svc-qty" value="${qty}" min="1" style="text-align:center">
+                <input type="number" class="svc-price" value="${price}" min="0" step="0.01" placeholder="EUR" style="text-align:right">
+                <input type="text" class="svc-total" readonly value="€0.00" style="text-align:right;background:#f1f5f9;border:none;font-weight:700;color:var(--primary)">
+                <button class="btn-icon btn-del" onclick="removeRow(this)" title="Remove">×</button>
+            `;
+            servicesList.appendChild(div);
+            bindRowEvents(div);
+            calculate();
+        }
+        function removeRow(btn) {
+            btn.closest('.service-row').remove();
+            calculate();
+        }
+        function bindRowEvents(row) {
+            row.querySelectorAll('input:not(.svc-total)').forEach(inp => {
+                inp.addEventListener('input', calculate);
+            });
+        }
+
+        // ── Tier presets ──
+        const tiers = {
+            quickstart: { 
+                name: 'Climate Quickstart (First-Timers)', 
+                scope: 'ESRS E1 (Climate Change) + ESRS 2 (General Disclosures) · Delivery: 4 business days · 1 revision round · Email support', 
+                price: 3000,
+                sac: '9983'
+            },
+            core: { 
+                name: 'Core Compliance (Best Value)', 
+                scope: 'ESRS E1+E2–E5 (Pollution, Water, Biodiv, Resource) · ESRS S1–S4 (Workforce, Value Chain, Communities, Consumers) · ESRS G1 (Business Conduct) · Delivery: 8 business days · 2 revision rounds · Priority support', 
+                price: 6000,
+                sac: '9983'
+            },
+            full: { 
+                name: 'Full Assurance (Complex Orgs)', 
+                scope: 'Double Materiality Assessment · Pre-audit review call · Auditor response support · Delivery: 15 business days · Unlimited revisions · Priority + Auditor Support', 
+                price: 10000,
+                sac: '9983'
+            }
+        };
+        function addTierService() {
+            const sel = document.getElementById('tierSelect');
+            const key = sel.value;
+            if(!key) return;
+            const t = tiers[key];
+            addServiceRow(t.name + '\n' + t.scope, t.sac, 1, t.price);
+            sel.value = '';
+        }
+
+        // ── Calculations ──
+        function calculate() {
+            let sub = 0;
+            document.querySelectorAll('.service-row').forEach(row => {
+                const qty = parseFloat(row.querySelector('.svc-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.svc-price').value) || 0;
+                const total = qty * price;
+                row.querySelector('.svc-total').value = '€' + total.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+                sub += total;
+            });
+            const taxRate = 0; // Zero-rated export
+            const discount = parseFloat(document.getElementById('discount')?.value) || 0;
+            const exRate = parseFloat(document.getElementById('exRate').value) || 92.50;
+            const tax = 0;
+            const total = sub - discount;
+            const inrTotal = total * exRate;
+
+            document.getElementById('previewSubtotal').textContent = fmtEUR(sub);
+            document.getElementById('previewTax').textContent = fmtEUR(tax);
+            document.getElementById('previewDiscount').textContent = fmtEUR(discount);
+            document.getElementById('previewINR').textContent = fmtINR(inrTotal);
+            document.getElementById('previewTotal').textContent = fmtEUR(total);
+
+            document.getElementById('outSubtotal').textContent = fmtEUR(sub);
+            document.getElementById('outTax').textContent = fmtEUR(tax);
+            document.getElementById('outDiscount').textContent = fmtEUR(discount);
+            document.getElementById('outINR').textContent = fmtINR(inrTotal);
+            document.getElementById('outTotal').textContent = fmtEUR(total);
+
+            // Exchange rate display
+            const rateSource = document.getElementById('rateSource').value || 'RBI Reference Rate';
+            document.getElementById('outExchange').textContent = 
+                `1 EUR = ₹${exRate.toFixed(2)} (${rateSource}) | Total INR: ${fmtINR(inrTotal)}`;
+
+            renderItems();
+        }
+        function fmtEUR(n) {
+            return '€' + n.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+        }
+        function fmtINR(n) {
+            return '₹' + n.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+        }
+
+        // ── Render items ──
+        function renderItems() {
+            const tbody = document.getElementById('outItems');
+            const rows = document.querySelectorAll('.service-row');
+            const sacGlobal = document.getElementById('sac').value || '9983';
+            if(rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:30px">Add services using the form on the left</td></tr>';
+                return;
+            }
+            let html = '';
+            rows.forEach(row => {
+                const desc = row.querySelector('.svc-desc').value;
+                const sac = row.querySelector('.svc-sac').value || sacGlobal;
+                const qty = row.querySelector('.svc-qty').value;
+                const price = row.querySelector('.svc-price').value;
+                const total = row.querySelector('.svc-total').value;
+                const parts = desc.split('\n');
+                const title = parts[0];
+                const scope = parts.slice(1).join('<br>');
+                html += `<tr>
+                    <td>
+                        <div class="item-desc">${title}</div>
+                        ${scope ? `<div class="item-scope">${scope}</div>` : ''}
+                    </td>
+                    <td><span class="item-sac">${sac}</span></td>
+                    <td>${qty}</td>
+                    <td>${fmtEUR(parseFloat(price)||0)}</td>
+                    <td>${total}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // ── Live preview ──
+        function updatePreview() {
+            document.getElementById('outInvNum').textContent = document.getElementById('invNumber').value || '—';
+            document.getElementById('outInvDate').textContent = formatDate(document.getElementById('invDate').value);
+            document.getElementById('outDueDate').textContent = formatDate(document.getElementById('dueDate').value);
+            document.getElementById('outClientName').textContent = document.getElementById('clientName').value || '—';
+            document.getElementById('outClientAddr').innerHTML = nl2br(document.getElementById('clientAddress').value) || '—';
+
+            const vat = document.getElementById('clientVat').value;
+            const vatEl = document.getElementById('outClientVat');
+            if(vat) { vatEl.style.display='inline-block'; vatEl.textContent='VAT / EORI: '+vat; }
+            else { vatEl.style.display='none'; }
+
+            document.getElementById('outClientContact').textContent = document.getElementById('clientContact').value || '';
+            document.getElementById('outPo').textContent = document.getElementById('poNumber').value || '—';
+            document.getElementById('outPlaceSupply').textContent = document.getElementById('placeSupply').value || 'Outside India — EU';
+            document.getElementById('outSac').textContent = document.getElementById('sac').value || '9983';
+
+            // GSTIN / IEC
+            const gstin = document.getElementById('gstin').value;
+            const gstinEl = document.getElementById('outGstin');
+            const gstin2 = document.getElementById('outGstin2');
+            if(gstin) { gstinEl.style.display='inline-block'; gstinEl.textContent='GSTIN: '+gstin; gstin2.textContent=gstin; }
+            else { gstinEl.style.display='none'; gstin2.textContent='—'; }
+
+            const iec = document.getElementById('iec').value;
+            const iecEl = document.getElementById('outIec');
+            if(iec) { iecEl.style.display='inline-block'; iecEl.textContent='IEC: '+iec; }
+            else { iecEl.style.display='none'; }
+
+            // Bank
+            document.getElementById('outBank').textContent = document.getElementById('bankName').value || '—';
+            document.getElementById('outAccount').textContent = document.getElementById('accountNumber').value || '—';
+            document.getElementById('outAccType').textContent = document.getElementById('accountType').value;
+            document.getElementById('outIfsc').textContent = document.getElementById('ifsc').value || '—';
+            document.getElementById('outSwift').textContent = document.getElementById('swift').value || '—';
+            document.getElementById('outIban').textContent = document.getElementById('iban').value || '—';
+            document.getElementById('outAdCode').textContent = document.getElementById('adCode').value || '—';
+
+            const branch = document.getElementById('branchAddress').value;
+            const branchEl = document.getElementById('outBranchAddr');
+            branchEl.textContent = branch || '';
+
+            const payNotes = document.getElementById('paymentNotes').value;
+            const payEl = document.getElementById('outPayNotes');
+            payEl.textContent = payNotes || '';
+
+            // GST Declaration
+            const exportType = document.getElementById('exportType').value;
+            const lutArn = document.getElementById('lutArn').value;
+            const lutValid = document.getElementById('lutValid').value;
+            const gstText = document.getElementById('gstText');
+
+            if(exportType === 'lut') {
+                gstText.innerHTML = `Supply meant for export under LUT without payment of Integrated Tax (IGST).<br>
+                    LUT ARN: <span id="outLutArn">${lutArn || '—'}</span> | Valid: <span id="outLutValid">${lutValid || '—'}</span>`;
+            } else {
+                gstText.innerHTML = `Supply meant for export on payment of IGST under Rule 96 of CGST Rules.<br>
+                    IGST paid will be claimed as refund via GST portal. Invoice reported in GSTR-1 Table 6A.`;
+            }
+        }
+
+        function formatDate(d) {
+            if(!d) return '—';
+            const dt = new Date(d);
+            return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+        }
+        function nl2br(s) { return s ? s.replace(/\n/g,'<br>') : ''; }
+
+        // Bind all inputs
+        const allInputs = [
+            'invNumber','invDate','dueDate','poNumber','placeSupply','currency',
+            'gstin','iec','sac',
+            'clientName','clientAddress','clientVat','clientContact','clientCountry',
+            'bankName','accountNumber','accountType','ifsc','swift','iban','adCode','branchAddress','paymentNotes',
+            'exportType','lutArn','lutValid','exRate','rateSource','customNotes'
+        ];
+        allInputs.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('input', () => { updatePreview(); calculate(); });
+        });
+
+        // Export type toggle
+        document.getElementById('exportType').addEventListener('change', function() {
+            const lutGroup = document.getElementById('lutGroup');
+            const lutValidGroup = document.getElementById('lutValidGroup');
+            if(this.value === 'lut') {
+                lutGroup.style.display = 'block';
+                lutValidGroup.style.display = 'block';
+            } else {
+                lutGroup.style.display = 'none';
+                lutValidGroup.style.display = 'none';
+            }
+            updatePreview(); calculate();
+        });
+
+        function resetForm() {
+            if(!confirm('Reset all fields to default?')) return;
+            document.getElementById('invNumber').value = 'CL-2026-001';
+            document.getElementById('invDate').value = today.toISOString().split('T')[0];
+            document.getElementById('dueDate').value = due.toISOString().split('T')[0];
+            document.getElementById('poNumber').value = '';
+            document.getElementById('gstin').value = '';
+            document.getElementById('iec').value = '';
+            document.getElementById('sac').value = '9983';
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientAddress').value = '';
+            document.getElementById('clientVat').value = '';
+            document.getElementById('clientContact').value = '';
+            document.getElementById('clientCountry').value = '';
+            document.getElementById('bankName').value = '';
+            document.getElementById('accountNumber').value = '';
+            document.getElementById('accountType').value = 'Current';
+            document.getElementById('ifsc').value = '';
+            document.getElementById('swift').value = '';
+            document.getElementById('iban').value = '';
+            document.getElementById('adCode').value = '';
+            document.getElementById('branchAddress').value = '';
+            document.getElementById('paymentNotes').value = '';
+            document.getElementById('exportType').value = 'lut';
+            document.getElementById('lutArn').value = '';
+            document.getElementById('lutValid').value = '';
+            document.getElementById('exRate').value = '92.50';
+            document.getElementById('rateSource').value = 'RBI Reference Rate';
+            document.getElementById('customNotes').value = '';
+            servicesList.innerHTML = '';
+            updatePreview(); calculate();
+        }
+
+        // Initial
+        calculate();
+    </script>
+</body>
+</html>
