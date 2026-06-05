@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ClimateLenz — Professional Export Invoice Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --primary: #0f2e26;
@@ -146,7 +147,7 @@
 
         .service-row {
             display: grid;
-            grid-template-columns: 2fr 60px 90px 100px 34px;
+            grid-template-columns: 2fr 60px 60px 80px 100px 34px;
             gap: 6px;
             align-items: center;
             margin-bottom: 6px;
@@ -879,6 +880,17 @@
 
                         <div class="section-divider"></div>
 
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Discount (EUR)</label>
+                                <input type="number" id="discount" value="0" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Reporting Period (Fiscal Year)</label>
+                                <input type="text" id="reportingPeriod" placeholder="e.g. 2024 or 2024-2025">
+                            </div>
+                        </div>
+
                         <div class="totals-box">
                             <div class="row"><span>Subtotal (EUR)</span><span class="amt" id="previewSubtotal">€0.00</span></div>
                             <div class="row"><span>IGST @ 0% (Zero-Rated Export)</span><span class="amt" id="previewTax">€0.00</span></div>
@@ -893,7 +905,8 @@
                         </div>
 
                         <div class="action-bar">
-                            <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save PDF</button>
+                            <button class="btn btn-primary" onclick="downloadPDF()">⬇️ Download PDF</button>
+                            <button class="btn btn-outline" onclick="window.print()">🖨️ Print</button>
                             <button class="btn btn-accent" onclick="resetForm()">↺ Reset All</button>
                         </div>
                     </div>
@@ -961,8 +974,8 @@
                     <!-- COMPLIANCE BAR -->
                     <div class="compliance-bar">
                         <div class="compliance-item">
-                            <div class="clabel">Place of Supply</div>
-                            <div class="cvalue" id="outPlaceSupply">Outside India — EU</div>
+                            <div class="clabel">Reporting Period</div>
+                            <div class="cvalue" id="outReportingPeriod">—</div>
                         </div>
                         <div class="compliance-item">
                             <div class="clabel">SAC Code</div>
@@ -982,9 +995,10 @@
                     <table class="inv-table">
                         <thead>
                             <tr>
-                                <th style="width:50%">Description</th>
-                                <th style="width:12%">SAC</th>
-                                <th style="width:10%">Qty</th>
+                                <th style="width:40%">Description</th>
+                                <th style="width:10%">Standards</th>
+                                <th style="width:8%">SAC</th>
+                                <th style="width:8%">Qty</th>
                                 <th style="width:14%">Unit Price</th>
                                 <th style="width:14%">Amount (EUR)</th>
                             </tr>
@@ -1089,7 +1103,7 @@
         let serviceCount = 0;
         const servicesList = document.getElementById('servicesList');
 
-        function addServiceRow(desc='', sac='', qty=1, price=0) {
+        function addServiceRow(desc='', sac='', qty=1, price=0, standards='') {
             serviceCount++;
             const div = document.createElement('div');
             div.className = 'service-row';
@@ -1097,6 +1111,12 @@
             div.innerHTML = `
                 <input type="text" class="svc-desc" placeholder="Service description" value="${desc}">
                 <input type="text" class="svc-sac" placeholder="SAC" value="${sac}" style="text-align:center">
+                <select class="svc-standards" style="text-align:center;width:100%;padding:7px 9px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit">
+                    <option value="">Standards</option>
+                    <option value="E1" ${standards==='E1' ? 'selected' : ''}>E1</option>
+                    <option value="E1+E2-E5" ${standards==='E1+E2-E5' ? 'selected' : ''}>E1+E2-E5</option>
+                    <option value="All" ${standards==='All' ? 'selected' : ''}>All (E+S+G)</option>
+                </select>
                 <input type="number" class="svc-qty" value="${qty}" min="1" style="text-align:center">
                 <input type="number" class="svc-price" value="${price}" min="0" step="0.01" placeholder="EUR" style="text-align:right">
                 <input type="text" class="svc-total" readonly value="€0.00" style="text-align:right;background:#f1f5f9;border:none;font-weight:700;color:var(--primary)">
@@ -1142,7 +1162,8 @@
             const key = sel.value;
             if(!key) return;
             const t = tiers[key];
-            addServiceRow(t.name + '\n' + t.scope, t.sac, 1, t.price);
+            const standards = key === 'quickstart' ? 'E1' : (key === 'core' ? 'E1+E2-E5' : 'All');
+            addServiceRow(t.name + '\n' + t.scope, t.sac, 1, t.price, standards);
             sel.value = '';
         }
 
@@ -1195,12 +1216,13 @@
             const rows = document.querySelectorAll('.service-row');
             const sacGlobal = document.getElementById('sac').value || '9983';
             if(rows.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:30px">Add services using the form on the left</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:30px">Add services using the form on the left</td></tr>';
                 return;
             }
             let html = '';
             rows.forEach(row => {
                 const desc = row.querySelector('.svc-desc').value;
+                const standards = row.querySelector('.svc-standards').value || '—';
                 const sac = row.querySelector('.svc-sac').value || sacGlobal;
                 const qty = row.querySelector('.svc-qty').value;
                 const price = row.querySelector('.svc-price').value;
@@ -1213,6 +1235,7 @@
                         <div class="item-desc">${title}</div>
                         ${scope ? `<div class="item-scope">${scope}</div>` : ''}
                     </td>
+                    <td style="text-align:center;font-size:12px;font-weight:600">${standards}</td>
                     <td><span class="item-sac">${sac}</span></td>
                     <td>${qty}</td>
                     <td>${fmtEUR(parseFloat(price)||0)}</td>
@@ -1227,6 +1250,7 @@
             document.getElementById('outInvNum').textContent = document.getElementById('invNumber').value || '—';
             document.getElementById('outInvDate').textContent = formatDate(document.getElementById('invDate').value);
             document.getElementById('outDueDate').textContent = formatDate(document.getElementById('dueDate').value);
+            document.getElementById('outReportingPeriod').textContent = document.getElementById('reportingPeriod').value || '—';
             document.getElementById('outClientName').textContent = document.getElementById('clientName').value || '—';
             document.getElementById('outClientAddr').innerHTML = nl2br(document.getElementById('clientAddress').value) || '—';
 
@@ -1297,7 +1321,7 @@
             'gstin','iec','sac',
             'clientName','clientAddress','clientVat','clientContact','clientCountry',
             'bankName','accountNumber','accountType','ifsc','swift','iban','adCode','branchAddress','paymentNotes',
-            'exportType','lutArn','lutValid','exRate','rateSource','customNotes'
+            'exportType','lutArn','lutValid','exRate','rateSource','customNotes','reportingPeriod','discount'
         ];
         allInputs.forEach(id => {
             const el = document.getElementById(id);
@@ -1347,8 +1371,24 @@
             document.getElementById('exRate').value = '92.50';
             document.getElementById('rateSource').value = 'RBI Reference Rate';
             document.getElementById('customNotes').value = '';
+            document.getElementById('discount').value = '0';
+            document.getElementById('reportingPeriod').value = '';
             servicesList.innerHTML = '';
             updatePreview(); calculate();
+        }
+
+        // ── PDF Export ──
+        function downloadPDF() {
+            const element = document.getElementById('invoicePaper');
+            const invNum = document.getElementById('invNumber').value || 'invoice';
+            const opt = {
+                margin: 5,
+                filename: `ClimateLenz-Invoice-${invNum}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+            html2pdf().set(opt).from(element).save();
         }
 
         // Initial
